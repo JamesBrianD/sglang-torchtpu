@@ -3,6 +3,7 @@
     "python/sglang/srt/arg_groups/kimi_k3_hook.py": 1,
     "python/sglang/srt/arg_groups/model_hook.py": 1,
     "python/sglang/srt/arg_groups/model_overrides/deepseek_v2.py": 1,
+    "python/sglang/srt/arg_groups/model_overrides/flint.py": 1,
     "python/sglang/srt/arg_groups/speculative_hook.py": 1,
     "python/sglang/srt/compilation/compiled_op.py": 1,
     "python/sglang/srt/disaggregation/decode.py": 2,
