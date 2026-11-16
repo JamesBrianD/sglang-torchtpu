@@ -358,13 +358,16 @@ class TestFlintCpu(CustomTestCase):
                             rtol=0,
                             atol=0,
                         )
-                    # Checkpoint has no expert bias; the loader leaves it at its
-                    # constructed value, so callers must not rely on zero-init alone.
+                    # The checkpoint carries no router bias, and the bias was
+                    # pre-filled (as a capture sentinel or meta build would), so
+                    # load_weights must zero it in place, keeping the TopK reference.
                     bias = model.model.layers[i].mlp.gate.expert_bias
                     self.assertIs(
                         model.model.layers[i].mlp.topk.topk_config.correction_bias,
                         bias,
                     )
+                    self.assertEqual(bias.dtype, torch.float32)
+                    self.assertEqual(int(torch.count_nonzero(bias)), 0)
 
     # ---- parsers ------------------------------------------------------------
 

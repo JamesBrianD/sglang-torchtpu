@@ -264,12 +264,15 @@ class FlintForCausalLM(Qwen3MoeForCausalLM):
         self, weights: Iterable[Tuple[str, torch.Tensor]], is_mtp: bool = False
     ):
         param_names = {name for name, _ in self.named_parameters()}
+        loaded_biases = set()
 
         def renamed_weights():
             for name, tensor in weights:
                 name = name.replace(
                     ".mlp.gate.e_score_correction_bias", ".mlp.gate.expert_bias"
                 ).replace(".self_attn.sinks", ".self_attn.softmax_offset")
+                if name.endswith(".mlp.gate.expert_bias"):
+                    loaded_biases.add(name)
                 if (
                     name.startswith("model.layers.")
                     and name.endswith(".self_attn.softmax_offset")
@@ -280,6 +283,16 @@ class FlintForCausalLM(Qwen3MoeForCausalLM):
                 yield name, tensor
 
         super().load_weights(renamed_weights(), is_mtp=is_mtp)
+        self._zero_unloaded_expert_biases(loaded_biases)
+
+    @torch.no_grad()
+    def _zero_unloaded_expert_biases(self, loaded_biases: set) -> None:
+        # The checkpoint may carry no router bias. Zero it in place: loaders that
+        # build on meta or pre-fill a capture sentinel never overwrite it, and
+        # TopKConfig.correction_bias holds this exact tensor.
+        for name, param in self.named_parameters():
+            if name.endswith(".mlp.gate.expert_bias") and name not in loaded_biases:
+                param.data.zero_()
 
     def _is_local_layer(self, name: str) -> bool:
         layer_id = get_layer_id(name)
