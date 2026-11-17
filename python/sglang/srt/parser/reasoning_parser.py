@@ -1514,6 +1514,12 @@ class _DeepSeekV3Detector(Qwen3Detector):
         self.reasoning_default = "explicit_thinking"
 
 
+class _FlintDetector(Qwen3Detector):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.reasoning_default = None
+
+
 class DeepSeekV4Detector(BaseReasoningFormatDetector):
     def __init__(
         self,
@@ -2288,6 +2294,7 @@ class ReasoningParser:
         "gigachat35": DeepSeekR1Detector,
         "inkling": InklingDetector,
         "iquest_q1": IQuestQ1ReasoningDetector,
+        "flint": _FlintDetector,
         "cohere_command4": CohereCommand4Detector,
     }
 
